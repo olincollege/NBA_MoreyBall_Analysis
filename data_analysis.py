@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import os 
+import os, operator
+from scraper import get_win_data, get_playoff_series_won
 
 pd.set_option('display.max_colwidth', 0)
 
@@ -25,6 +26,7 @@ DATA_NAMES = {
     'Field_Goals_3P': 'Percent of Field Goals that were 3 Points'
 }
 
+
 def get_file_names():
     """
     Get file names
@@ -33,6 +35,7 @@ def get_file_names():
     names = os.listdir(os.chdir('Data'))
     os.chdir(owd)
     return names
+
 
 def data_var_def():
     """
@@ -43,6 +46,7 @@ def data_var_def():
     data_dictionary_style = data_dictionary.style.set_properties(**{'text-align': 'left'})
     data_dictionary_style.set_table_styles([dict(selector='th', props=[('text-align', 'center')])])
     return data_dictionary_style
+
 
 def get_season_clean_csv(data_set):
     """
@@ -57,6 +61,7 @@ def get_season_clean_csv(data_set):
 
     return data_set
 
+
 def season_full_data(file_name):
     """
     Entire season data
@@ -68,6 +73,7 @@ def season_full_data(file_name):
 
     return get_season_clean_csv(data_set)
 
+
 def season_summary(file_name):
     """
     Get season summary for each year
@@ -78,6 +84,7 @@ def season_summary(file_name):
     data_set['Team'] = data_set['Team'].str.replace("*","")
 
     return get_season_clean_csv(data_set)
+
 
 def team_summary(team):
     """
@@ -96,6 +103,7 @@ def team_summary(team):
     team_summary_full.pop("Team")
 
     return team_summary_full.dropna()
+
 
 def season_summary_visual(stat, playoff):
     """
@@ -136,7 +144,7 @@ def team_summary_visual(team, stat, playoff):
     team_stats = team_summary(team)
     print(team_stats)
     stats = {}
-    nums_for_stat = list(team_stats.loc[:,"Field_Goal_Percent"])
+    nums_for_stat = list(team_stats.loc[:,stat])
     print(nums_for_stat)
     for i in range(0, team_stats.shape[0]):
         print(i)
@@ -164,6 +172,35 @@ def compare_var_visual():
     Compare two variables over time
     """
     pass
+
+
+def edge_cases_metric():
+    """
+    For each season, calculated edge case metric.
+    1 Point is added to the "edge" metric during a season if a team that is
+    top 5 in 3PA makes the playoffs. 1 point is subtracted if a team that is
+    bottom 5 in 3PA makes the playoffs.
+    """
+    edges = {}
+    
+    for i in range(10,20):
+        data = season_full_data(f"20{i}.csv")
+        playoffs = get_playoff_series_won(f"20{i}").keys()
+        percents = dict(zip(data.iloc[:,1],data.iloc[:,11]))
+        sorted_percents = sorted(percents.items(), key=operator.itemgetter(1))
+        bottom_five = sorted_percents[0:5]
+        top_five = sorted_percents[-5:-1]
+        top_five.append(sorted_percents[0])
+        for j in range(0,5):
+            metric = 0
+            if bottom_five[j][0] in playoffs:
+                print(bottom_five[j][0], i, "bottom")
+                metric -= 1
+            if top_five[j][0] in playoffs:
+                print(top_five[j][0], i, "top")
+                metric += 1
+        edges[i] = metric
+    return edges
 
 """
 def morey_ball_analysis(year, playoff):
