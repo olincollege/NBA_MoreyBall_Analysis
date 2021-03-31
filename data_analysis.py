@@ -97,17 +97,67 @@ def team_summary(team):
 
     return team_summary_full.dropna()
 
-def season_summary_visual():
+def season_summary_visual(stat, playoff):
     """
     Trend over time of a certain stat
-    """
-    pass
 
-def team_summary_visual():
+    Args:
+        stat: A string representing the stat in the header to plot
+        playoff: A boolean saying whether you want playoffs stats or 
+        regular season
+    """
+    head_list = list(DATA_NAMES.keys())
+    try:
+        stat_index = head_list.index(stat)
+    except(ValueError):
+        return "Stat does not exist in data."
+    data = []
+    year = []
+    for i in range(10,21):
+        if playoff:
+            all_stats = season_summary(f'20{i}p.csv')
+        else:
+            all_stats = season_summary(f'20{i}.csv')
+
+        data.append(all_stats.iloc[0, stat_index])
+        year.append(f'{i-1}-{i}')
+
+    plt.plot(year, data)
+    plt.scatter(year, data)
+    plt.xlabel('Season')
+    plt.ylabel(stat)
+    plt.show()
+
+
+def team_summary_visual(team, stat, playoff):
     """
     Trend over time of a certain stat
     """
-    pass
+    team_stats = team_summary(team)
+    print(team_stats)
+    stats = {}
+    nums_for_stat = list(team_stats.loc[:,"Field_Goal_Percent"])
+    print(nums_for_stat)
+    for i in range(0, team_stats.shape[0]):
+        print(i)
+        name = team_stats.iloc[i].name
+        if name[len(name)-5:len(name)-4] == 'p' and playoff:
+            stats[name[2:4]] = round(float(nums_for_stat[i]),3)
+        elif name[len(name)-5:len(name)-4] == 'p' and not playoff:
+            continue
+        elif name[len(name)-5:len(name)-4] != 'p' and not playoff:
+            stats[name[2:4]] = round(float(nums_for_stat[i]),3)
+        else:
+            continue
+    
+    sorted_year = sorted(stats.items())
+    sorted_stat = dict(sorted_year)
+    plt.plot(list(sorted_stat.keys()), list(sorted_stat.values()))
+    plt.scatter(list(sorted_stat.keys()), list(sorted_stat.values()))
+    plt.xlabel('Season')
+    plt.ylabel(stat)
+    plt.show()
+
 
 def compare_var_visual():
     """
