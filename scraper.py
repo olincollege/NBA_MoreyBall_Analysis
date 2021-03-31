@@ -36,4 +36,4 @@ def convert_to_csv():
     os.chdir('Data')
     files = os.listdir()
     for file in files:
-        os.rename(file, f"{file}.csv")
+        os.rename(file, f"20{file}")
