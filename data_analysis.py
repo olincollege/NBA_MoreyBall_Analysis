@@ -62,11 +62,14 @@ def get_season_clean_csv(data_set):
     return data_set
 
 
-def season_full_data(file_name):
+def season_full_data(file_name, playoff):
     """
     Entire season data
     """
-    data_set = pd.read_csv(f"Data/{file_name}")
+    if playoff:
+            data_set = pd.read_csv(f"Data/{file_name}p.csv")
+    else:
+        data_set = pd.read_csv(f"Data/{file_name}.csv")
     data_set.columns = data_set.iloc[1]
     data_set = data_set[2:-1]
     data_set['Team'] = data_set['Team'].str.replace("*","")
@@ -74,11 +77,14 @@ def season_full_data(file_name):
     return get_season_clean_csv(data_set)
 
 
-def season_summary(file_name):
+def season_summary(file_name, playoff):
     """
     Get season summary for each year
     """
-    data_set = pd.read_csv(f"Data/{file_name}")
+    if playoff:
+            data_set = pd.read_csv(f"Data/{file_name}p.csv")
+    else:
+        data_set = pd.read_csv(f"Data/{file_name}.csv")
     data_set.columns = data_set.iloc[1]
     data_set = data_set[-1:]
     data_set['Team'] = data_set['Team'].str.replace("*","")

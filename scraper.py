@@ -65,8 +65,15 @@ def get_win_data(year):
         else:
             record[df_e.iloc[i,0]] = (df_e.iloc[i,1], df_e.iloc[i,2])
             record[df_w.iloc[i,0]] = (df_w.iloc[i,1], df_w.iloc[i,2])
-    return record
+    
+    if 'New Jersey Nets' in record.keys(): 
+        record['Brooklyn Nets'] = record.pop('New Jersey Nets')
 
+    record = dict(sorted(record.items()))
+    record = pd.DataFrame.from_dict(record, orient='index')
+    record.index = record.index.str.replace("*","")
+
+    return record
 
 def get_playoff_series_won(year):
     """
@@ -82,4 +89,7 @@ def get_playoff_series_won(year):
         record = df.iloc[i,2]
         dash = record.index('-')
         series_results[df.iloc[i,1]] = int(df.iloc[i,2][0:dash])//4
+    
+    series_results = pd.DataFrame.from_dict(series_results, orient='index')
+    series_results.index = series_results.index.str.replace("*","")
     return series_results
