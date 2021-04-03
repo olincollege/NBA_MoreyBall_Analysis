@@ -51,7 +51,8 @@ def data_var_def():
 def get_season_clean_csv(data_set):
     """
     Clean all the data and drops the rest of the columns. 
-    Returns the cleaned data set.
+
+    Returns: The cleaned data set as a pandas df.
     """
     data_set_size = len(data_set.columns) - 19
     readable_column_headers = ['nan'] + list(DATA_NAMES.keys()) + (['nan']*data_set_size)
@@ -62,14 +63,20 @@ def get_season_clean_csv(data_set):
     return data_set
 
 
-def season_full_data(file_name, playoff):
+def season_full_data(year, playoff):
     """
-    Entire season data
+    Args:
+        year: A string representing the year of data to be returned
+        playoff: A boolean representing whether to clean playoff or regular
+        season data.
+
+    Returns: cleaned up full season data to be inputted into other
+    functions. 
     """
     if playoff:
-            data_set = pd.read_csv(f"Data/{file_name}p.csv")
+            data_set = pd.read_csv(f"Data/{year}p.csv")
     else:
-        data_set = pd.read_csv(f"Data/{file_name}.csv")
+        data_set = pd.read_csv(f"Data/{year}.csv")
     data_set.columns = data_set.iloc[1]
     data_set = data_set[2:-1]
     data_set['Team'] = data_set['Team'].str.replace("*","")
@@ -77,14 +84,22 @@ def season_full_data(file_name, playoff):
     return get_season_clean_csv(data_set)
 
 
-def season_summary(file_name, playoff):
+def season_summary(year, playoff):
     """
-    Get season summary for each year
+    Get season summary stats for each year
+
+    This stat will be the league average of each stat listed in DATA_NAMES
+    for all teams.
+
+    Args:
+        year: A string representing the desired year of data
+        playoff: A boolean representing whether to pull playoff data or
+        regular season.
     """
     if playoff:
-            data_set = pd.read_csv(f"Data/{file_name}p.csv")
+            data_set = pd.read_csv(f"Data/{year}p.csv")
     else:
-        data_set = pd.read_csv(f"Data/{file_name}.csv")
+        data_set = pd.read_csv(f"Data/{year}.csv")
     data_set.columns = data_set.iloc[1]
     data_set = data_set[-1:]
     data_set['Team'] = data_set['Team'].str.replace("*","")
@@ -94,7 +109,13 @@ def season_summary(file_name, playoff):
 
 def team_summary(team):
     """
-    Get team summary for each year
+    Get team summary stats for each year from the scraped CSV.
+
+    Team summary stats include yearly averages for all stats listed in
+    DATA_NAMES.
+
+    Args:
+        team: A string representing the name of the team to pull data for.
     """
     file_names = get_file_names()
     team_summary_full = pd.DataFrame(columns = list(DATA_NAMES.keys()), index = file_names)
@@ -111,14 +132,17 @@ def team_summary(team):
     return team_summary_full.dropna()
 
 
-def season_summary_visual(stat, playoff):
+def season_summary_visual(stat, playoff, y_label, title):
     """
-    Trend over time of a certain stat
+    Trend over time of the league average of a single stat
 
     Args:
-        stat: A string representing the stat in the header to plot
-        playoff: A boolean saying whether you want playoffs stats or 
-        regular season
+        stat: A string representing the stat in the header to plot (all possible
+        'stats' are inside of the DATA_NAMES dictionary)
+        playoff: A boolean saying whether to plot playoffs data or regular
+        season.
+        y_label: String representing the desired y-label of the plot.
+        title: String representing the desired title of the plot.
     """
     head_list = list(DATA_NAMES.keys())
     try:
@@ -129,17 +153,18 @@ def season_summary_visual(stat, playoff):
     year = []
     for i in range(10,21):
         if playoff:
-            all_stats = season_summary(f'20{i}p.csv')
+            all_stats = season_summary(f'20{i}', True)
         else:
-            all_stats = season_summary(f'20{i}.csv')
+            all_stats = season_summary(f'20{i}', False)
 
-        data.append(all_stats.iloc[0, stat_index])
+        data.append(float(all_stats.iloc[0, stat_index]))
         year.append(f'{i-1}-{i}')
 
     plt.plot(year, data)
     plt.scatter(year, data)
     plt.xlabel('Season')
-    plt.ylabel(stat)
+    plt.ylabel(y_label)
+    plt.title(title)
     plt.show()
 
 
