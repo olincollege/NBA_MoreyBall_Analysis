@@ -8,9 +8,9 @@ import numpy as np; np.random.seed(42)
 YEARS_LIST = ['2010','2011','2012','2013','2014', \
     '2015','2016','2017','2018','2019','2020', ]
 
-def box_plot(stat_nba, playoff):
+def nba_stat_summary(stat_nba, playoff):
     """
-    Box and Whisker plot for all seasons
+    Gives the nba state summary
     """
     df = pd.DataFrame(columns=YEARS_LIST)
 
@@ -20,21 +20,25 @@ def box_plot(stat_nba, playoff):
 
     return df
 
-def win_compare():
+def win_compare(year,stat_nba, playoff):
 
     df = pd.DataFrame(columns=YEARS_LIST)
 
     for years in YEARS_LIST:
         win_data = list(get_win_data(int(years)).iloc[:,0])
-        df[years] = win_data
+        games_played = int(season_summary(years, playoff).iloc[:,2])
+        df[years] = [int(i) for i in win_data]
+        df[years] = df[years].div(games_played).round(2)
 
     df.index = get_win_data(int(2010)).index
-    return df
+    nba_stat = nba_stat_summary(stat_nba, playoff)
+    nba_stat.index = get_win_data(int(2010)).index
+    plt.scatter(df[year], nba_stat[year])
 
-def seaborn_plots(stat_nba, playoff, x_title, y_title, label):
+def seaborn_plots(stat_nba, playoff):
 
     df = box_plot(stat_nba, playoff)
-    sns.boxplot(x=x_title, y=y_title, data=pd.melt(df))
+    sns.boxplot(x="variable", y="value", data=pd.melt(df))
     plt.show()
 
 

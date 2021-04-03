@@ -197,14 +197,6 @@ def team_summary_visual(team, stat, playoff):
     plt.ylabel(stat)
     plt.show()
 
-
-def compare_var_visual():
-    """
-    Compare two variables over time
-    """
-    pass
-
-
 def edge_cases_metric():
     """
     For each season, calculated edge case metric.
@@ -232,27 +224,3 @@ def edge_cases_metric():
                 metric += 1
         edges[i] = metric
     return edges
-
-"""
-def morey_ball_analysis(year, playoff):
-
-
-
-    team = clean_data_set["Rank"]
-    field_goal_percent = clean_data_set["Field_Goals_3P"]
-
-    plt.plot(team, field_goal_percent, ".")
-
-    print(data_set)
-
-  
-    # Uncomment the next code line and modify to plot the data appropriately.
-    # Then delete these comment lines.
-    plt.plot(forces, power_output, ".")
-    
-    # In the following lines, replace the strings with appropriate labels.
-    plt.xlabel("Force on Accelerator (Lbs)")
-    plt.ylabel("Horsepower (Hp)")
-    plt.title(f"Effect of Force on Accelerator (Lbs) on the Engine Horsepower (Hp) using a {engine_type} Engine")
-    plt.show()
-"""
