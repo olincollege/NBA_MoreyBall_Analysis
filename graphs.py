@@ -4,9 +4,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np; np.random.seed(42)
-
-YEARS_LIST = ['2010','2011','2012','2013','2014', \
-    '2015','2016','2017','2018','2019','2020', ]
+import plotly.graph_objects as go
 
 def nba_stat_summary(stat_nba, playoff):
     """
@@ -37,8 +35,46 @@ def win_compare(year,stat_nba, playoff):
 
 def seaborn_plots(stat_nba, playoff):
 
-    df = box_plot(stat_nba, playoff)
+    df = nba_stat_summary(stat_nba, playoff)
     sns.boxplot(x="variable", y="value", data=pd.melt(df))
     plt.show()
 
+def interactive_map(team, title):
+    """
+    Generates interactive map based on team names (includes playoffs)
+    """
+    df = team_summary(team)
+    fig = go.Figure()
+    for column in df.columns.to_list():
+        fig.add_trace(
+            go.Scatter(
+                x = df.index,
+                y = df[column],
+                name = column
+            )
+        )
 
+    button_initial = dict(label = 'Please Select One', method = 'update',
+                      args = [{'title':'Please Select One',
+                               'showlegend':True}])
+
+    def create_layout_button(column):
+        return dict(label = column,
+                    method = 'update',
+                    args = [{'visible': df.columns.isin([column]),
+                             'title': column,
+                             'showlegend': True}])
+
+    fig.update_layout(
+        updatemenus=[go.layout.Updatemenu(
+            active = 0,
+            buttons = [button_initial] + list(df.columns.map(lambda column: create_layout_button(column)))
+            )
+        ],
+         yaxis_type="log"       
+    )
+    fig.update_layout(
+        title_text=f"{team} Team Summary",
+        height=800
+    )
+    fig.show()

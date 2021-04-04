@@ -26,6 +26,8 @@ DATA_NAMES = {
     'Field_Goals_3P': 'Percent of Field Goals that were 3 Points'
 }
 
+YEARS_LIST = ['2010','2011','2012','2013','2014', \
+    '2015','2016','2017','2018','2019','2020', ]
 
 def get_file_names():
     """
@@ -74,9 +76,9 @@ def season_full_data(year, playoff):
     functions. 
     """
     if playoff:
-            data_set = pd.read_csv(f"Data/{year}p.csv")
+            data_set = pd.read_csv(f"Data/{year}")
     else:
-        data_set = pd.read_csv(f"Data/{year}.csv")
+        data_set = pd.read_csv(f"Data/{year}")
     data_set.columns = data_set.iloc[1]
     data_set = data_set[2:-1]
     data_set['Team'] = data_set['Team'].str.replace("*","")
@@ -117,20 +119,20 @@ def team_summary(team):
     Args:
         team: A string representing the name of the team to pull data for.
     """
-    file_names = get_file_names()
+    file_names = sorted(get_file_names())
     team_summary_full = pd.DataFrame(columns = list(DATA_NAMES.keys()), index = file_names)
 
     for files in file_names:
-        data_set = season_full_data(files)
+        data_set = season_full_data(files, False)
         if team in data_set.Team.values:
             data_set.set_index("Team", inplace=True)
             data_set.head()
             team_summary_full.loc[files] = data_set.loc[team]
     
     team_summary_full.pop("Team")
+    team_summary_full.index = team_summary_full.index.str.replace('.csv', '', regex=True)
 
     return team_summary_full.dropna()
-
 
 def season_summary_visual(stat, playoff, y_label, title):
     """
