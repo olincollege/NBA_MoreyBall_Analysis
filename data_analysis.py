@@ -1,6 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import os, operator
+import os, operator, statistics
 from scraper import get_win_data, get_playoff_series_won
 
 pd.set_option('display.max_colwidth', 0)
@@ -76,9 +76,9 @@ def season_full_data(year, playoff):
     functions. 
     """
     if playoff:
-            data_set = pd.read_csv(f"Data/{year}")
+            data_set = pd.read_csv(f"Data/{year}p.csv")
     else:
-        data_set = pd.read_csv(f"Data/{year}")
+        data_set = pd.read_csv(f"Data/{year}.csv")
     data_set.columns = data_set.iloc[1]
     data_set = data_set[2:-1]
     data_set['Team'] = data_set['Team'].str.replace("*","")
@@ -134,6 +134,7 @@ def team_summary(team):
 
     return team_summary_full.dropna()
 
+
 def season_summary_visual(stat, playoff, y_label, title):
     """
     Trend over time of the league average of a single stat
@@ -146,6 +147,7 @@ def season_summary_visual(stat, playoff, y_label, title):
         y_label: String representing the desired y-label of the plot.
         title: String representing the desired title of the plot.
     """
+
     head_list = list(DATA_NAMES.keys())
     try:
         stat_index = head_list.index(stat)
@@ -209,20 +211,60 @@ def edge_cases_metric():
     edges = {}
     
     for i in range(10,20):
-        data = season_full_data(f"20{i}.csv")
-        playoffs = get_playoff_series_won(f"20{i}").keys()
+        data = season_full_data(f"20{i}", False)
+        playoffs = list(get_playoff_series_won(f"20{i}").to_dict()[0].keys())
         percents = dict(zip(data.iloc[:,1],data.iloc[:,11]))
         sorted_percents = sorted(percents.items(), key=operator.itemgetter(1))
         bottom_five = sorted_percents[0:5]
-        top_five = sorted_percents[-5:-1]
+        
+        top_five = sorted_percents[-6:-1]
+        
         top_five.append(sorted_percents[0])
         for j in range(0,5):
             metric = 0
             if bottom_five[j][0] in playoffs:
-                print(bottom_five[j][0], i, "bottom")
                 metric -= 1
             if top_five[j][0] in playoffs:
-                print(top_five[j][0], i, "top")
                 metric += 1
         edges[i] = metric
     return edges
+
+
+def playoff_round_3P_playoff_performance(year):
+    """
+    Same as the last function, but compares playoff victories
+    to shooting in the playoffs rather than in the regular
+    season.
+    """
+    playoffs = get_playoff_series_won(year)
+    d = playoffs.to_dict()[0]
+    # Changes in team names
+    if 'New Jersey Nets' in d:
+        d['Brooklyn Nets'] = d.pop('New Jersey Nets')
+    if 'Charlotte Bobcats' in d:
+        d['Charlotte Hornets'] = d.pop('Charlotte Bobcats')
+    if 'New Orleans Hornets' in d:
+        d['New Orleans Pelicans'] = d.pop('New Orleans Hornets')
+
+    keys = d.keys()
+    season_data = season_full_data(year, True)
+    playoff_data = {}
+
+    for i in range(season_data.shape[0]):
+        name = season_data.iloc[i,1]
+        if name not in list(d.keys()):
+            continue
+        else:
+            if d[name] in playoff_data:
+                playoff_data[d[name]][0].append(float(season_data.iloc[i,11]))
+                playoff_data[d[name]][1].append(float(season_data.iloc[1,17]))
+            else:
+                playoff_data[d[name]] = [[float(season_data.iloc[i,11])], [float(season_data.iloc[i,17])]]
+
+    for i in range(0,5):
+        playoff_data[i][0] = statistics.mean(playoff_data[i][0])
+        playoff_data[i][1] = statistics.mean(playoff_data[i][1])
+
+    return dict(sorted(playoff_data.items()))
+
+

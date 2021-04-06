@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 from requests import get
 import pandas as pd
-import os
+import os, statistics
 
 def get_shooting_reg_season():
     """
@@ -93,3 +93,22 @@ def get_playoff_series_won(year):
     series_results = pd.DataFrame.from_dict(series_results, orient='index')
     series_results.index = series_results.index.str.replace("*","")
     return series_results
+
+
+def get_efg():
+    efgs = {}
+    efg_year = []
+    efg = []
+    year_list = ['2010', '2011', '2012', '2013', \
+        '2014', '2015', '2016', '2017', '2018', '2019', '2020']
+    for year in year_list:
+        r = get(f"https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url=%2Fleagues%2FNBA_{year}.html&div=div_misc_stats")
+        soup = BeautifulSoup(r.content, 'html.parser')
+        data = soup.find('table', attrs={'id':'misc_stats'})
+        df = pd.read_html(str(data))[0]
+        for i in range(0,df.shape[0]):
+            efg.append(df.iloc[i,17])
+            efg_year.append(year)
+            
+    df = pd.DataFrame(list(zip(efg_year, efg)), columns=['Year', 'eFG%'])
+    return df
