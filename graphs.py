@@ -106,7 +106,7 @@ def win_compare(year,stat_nba, playoff, xlabel, ylabel, title):
     plt.scatter(df[year], nba_stat[year])
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    plt.title(title")
+    plt.title(title)
     plt.show()
 
 

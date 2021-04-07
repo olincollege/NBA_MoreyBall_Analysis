@@ -172,7 +172,7 @@ def edge_cases_metric():
     return edges
 
 
-def playoff_round_3P(year, playoffs):
+def playoff_round_3P(year, playoff):
     """
     Compares playoffs outcome to % of shots attempted
     from 3PT and % of three points attempted made.
@@ -197,7 +197,7 @@ def playoff_round_3P(year, playoffs):
         d['New Orleans Pelicans'] = d.pop('New Orleans Hornets')
 
     keys = d.keys()
-    season_data = season_full_data(year, playoffs)
+    season_data = season_full_data(year, playoff)
     playoff_data = {}
 
     for i in range(season_data.shape[0]):
