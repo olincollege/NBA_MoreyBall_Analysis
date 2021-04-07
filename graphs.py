@@ -7,21 +7,91 @@ import numpy as np; np.random.seed(42)
 import plotly.graph_objects as go
 import matplotlib
 
-def nba_stat_summary(stat_nba, playoff):
+
+def season_summary_visual(stat, playoff, y_label, title):
     """
-    Gives the nba state summary
+    Trend over time of the league average of a single stat, visualized
+    as a matplotlib scatter plot.
+
+    Args:
+        stat: A string representing the stat in the header to plot (all possible
+        'stats' are inside of the DATA_NAMES dictionary)
+        playoff: A boolean saying whether to plot playoffs data or regular
+        season.
+        y_label: String representing the desired y-label of the plot.
+        title: String representing the desired title of the plot.
     """
-    df = pd.DataFrame(columns=YEARS_LIST)
 
-    for years in YEARS_LIST:
-        season_full =  season_full_data(years, playoff)
-        df[years] = pd.to_numeric(season_full[stat_nba])
+    head_list = list(DATA_NAMES.keys())
+    try:
+        stat_index = head_list.index(stat)
+    except(ValueError):
+        return "Stat does not exist in data."
+    data = []
+    year = []
+    for i in range(10,21):
+        if playoff:
+            all_stats = season_summary(f'20{i}', True)
+        else:
+            all_stats = season_summary(f'20{i}', False)
 
-    return df
+        data.append(float(all_stats.iloc[0, stat_index]))
+        year.append(f'{i-1}-{i}')
+
+    plt.plot(year, data)
+    plt.scatter(year, data)
+    plt.xlabel('Season')
+    plt.ylabel(y_label)
+    plt.title(title)
+    plt.show()
 
 
-def win_compare(year,stat_nba, playoff):
+def team_summary_visual(team, stat, playoff):
+    """
+    Trend over time of a stat for a single team, visualized as a matplotlib
+    scatter plot.
 
+    Args:
+        team: A string representing the team name
+        stat: String representing the desired stat to pull data for
+        playoff: A boolean representing whether to pull playoffs stats
+        or regular season stats.
+    """
+    team_stats = team_summary(team)
+    print(team_stats)
+    stats = {}
+    nums_for_stat = list(team_stats.loc[:,stat])
+    print(nums_for_stat)
+    for i in range(0, team_stats.shape[0]):
+        print(i)
+        name = team_stats.iloc[i].name
+        if name[len(name)-5:len(name)-4] == 'p' and playoff:
+            stats[name[2:4]] = round(float(nums_for_stat[i]),3)
+        elif name[len(name)-5:len(name)-4] == 'p' and not playoff:
+            continue
+        elif name[len(name)-5:len(name)-4] != 'p' and not playoff:
+            stats[name[2:4]] = round(float(nums_for_stat[i]),3)
+        else:
+            continue
+    
+    sorted_year = sorted(stats.items())
+    sorted_stat = dict(sorted_year)
+    plt.plot(list(sorted_stat.keys()), list(sorted_stat.values()))
+    plt.scatter(list(sorted_stat.keys()), list(sorted_stat.values()))
+    plt.xlabel('Season')
+    plt.ylabel(stat)
+    plt.show()
+
+
+def win_compare(year,stat_nba, playoff, xlabel, ylabel, title):
+    """
+        Args:
+            year: Int representing the year to pull data for
+            stat_nba:
+
+    """
+
+    year = str(year)
     df = pd.DataFrame(columns=YEARS_LIST)
 
     for years in YEARS_LIST:
@@ -34,10 +104,11 @@ def win_compare(year,stat_nba, playoff):
     nba_stat = nba_stat_summary(stat_nba, playoff)
     nba_stat.index = get_win_data(int(2010)).index
     plt.scatter(df[year], nba_stat[year])
-    plt.xlabel('Win Percentage')
-    plt.ylabel(f'% of Shots Attempted from 3PT')
-    plt.title(f"% of Shots Attempted from 3PT vs Win Percentage ({year})")
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title")
     plt.show()
+
 
 def seaborn_plots(stat_nba, playoff):
 
@@ -58,8 +129,8 @@ def efg_vs_3PA():
     plt.show()
 
 
-def playoff_3P_chart(year):
-    data = playoff_round_3P(year)
+def playoff_3P_chart(year, playoffs):
+    data = playoff_round_3P(year, playoffs)
     labels = list(data.keys())
     threes_attempted = []
     threes_made = []

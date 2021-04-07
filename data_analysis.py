@@ -31,23 +31,12 @@ YEARS_LIST = ['2010','2011','2012','2013','2014', \
 
 def get_file_names():
     """
-    Get file names
+    Get file names 
     """
     owd = os.getcwd()
     names = os.listdir(os.chdir('Data'))
     os.chdir(owd)
     return names
-
-
-def data_var_def():
-    """
-    Prints all the headers of the data and what they mean
-    in a clean styled table
-    """
-    data_dictionary = pd.DataFrame(DATA_NAMES.items(), columns=["CSV Headers", "Meaning"])
-    data_dictionary_style = data_dictionary.style.set_properties(**{'text-align': 'left'})
-    data_dictionary_style.set_table_styles([dict(selector='th', props=[('text-align', 'center')])])
-    return data_dictionary_style
 
 
 def get_season_clean_csv(data_set):
@@ -109,6 +98,22 @@ def season_summary(year, playoff):
     return get_season_clean_csv(data_set)
 
 
+def nba_stat_summary(stat_nba, playoff):
+    """
+    Pulls data for a single stat for every team over the last 10 seasons.
+
+    Returns: a pandas dataframe where indices represent different teams and
+    column header represents the season.
+    """
+    df = pd.DataFrame(columns=YEARS_LIST)
+
+    for years in YEARS_LIST:
+        season_full =  season_full_data(years, playoff)
+        df[years] = pd.to_numeric(season_full[stat_nba])
+
+    return df
+
+
 def team_summary(team):
     """
     Get team summary stats for each year from the scraped CSV.
@@ -135,78 +140,15 @@ def team_summary(team):
     return team_summary_full.dropna()
 
 
-def season_summary_visual(stat, playoff, y_label, title):
-    """
-    Trend over time of the league average of a single stat
-
-    Args:
-        stat: A string representing the stat in the header to plot (all possible
-        'stats' are inside of the DATA_NAMES dictionary)
-        playoff: A boolean saying whether to plot playoffs data or regular
-        season.
-        y_label: String representing the desired y-label of the plot.
-        title: String representing the desired title of the plot.
-    """
-
-    head_list = list(DATA_NAMES.keys())
-    try:
-        stat_index = head_list.index(stat)
-    except(ValueError):
-        return "Stat does not exist in data."
-    data = []
-    year = []
-    for i in range(10,21):
-        if playoff:
-            all_stats = season_summary(f'20{i}', True)
-        else:
-            all_stats = season_summary(f'20{i}', False)
-
-        data.append(float(all_stats.iloc[0, stat_index]))
-        year.append(f'{i-1}-{i}')
-
-    plt.plot(year, data)
-    plt.scatter(year, data)
-    plt.xlabel('Season')
-    plt.ylabel(y_label)
-    plt.title(title)
-    plt.show()
-
-
-def team_summary_visual(team, stat, playoff):
-    """
-    Trend over time of a certain stat
-    """
-    team_stats = team_summary(team)
-    print(team_stats)
-    stats = {}
-    nums_for_stat = list(team_stats.loc[:,stat])
-    print(nums_for_stat)
-    for i in range(0, team_stats.shape[0]):
-        print(i)
-        name = team_stats.iloc[i].name
-        if name[len(name)-5:len(name)-4] == 'p' and playoff:
-            stats[name[2:4]] = round(float(nums_for_stat[i]),3)
-        elif name[len(name)-5:len(name)-4] == 'p' and not playoff:
-            continue
-        elif name[len(name)-5:len(name)-4] != 'p' and not playoff:
-            stats[name[2:4]] = round(float(nums_for_stat[i]),3)
-        else:
-            continue
-    
-    sorted_year = sorted(stats.items())
-    sorted_stat = dict(sorted_year)
-    plt.plot(list(sorted_stat.keys()), list(sorted_stat.values()))
-    plt.scatter(list(sorted_stat.keys()), list(sorted_stat.values()))
-    plt.xlabel('Season')
-    plt.ylabel(stat)
-    plt.show()
-
 def edge_cases_metric():
     """
     For each season, calculated edge case metric.
     1 Point is added to the "edge" metric during a season if a team that is
     top 5 in 3PA makes the playoffs. 1 point is subtracted if a team that is
     bottom 5 in 3PA makes the playoffs.
+
+    Returns: Dictionary where key is an int representing the year and the
+    value is the number of edge-cases during that year.
     """
     edges = {}
     
@@ -230,15 +172,23 @@ def edge_cases_metric():
     return edges
 
 
-def playoff_round_3P_playoff_performance(year):
+def playoff_round_3P(year, playoffs):
     """
-    Same as the last function, but compares playoff victories
-    to shooting in the playoffs rather than in the regular
-    season.
+    Compares playoffs outcome to % of shots attempted
+    from 3PT and % of three points attempted made.
+
+    Args:
+        year: an int representing the year to compare data for
+        playoffs: a boolean representing whether to compare outcome to 
+        team shooting data in the playoffs or regular season
+
+    Returns: a dictionary where the key is the number of playoffs rounds
+    won and the key is a list where the 0th element is %3PA and the 1st is
+    %3PM
     """
     playoffs = get_playoff_series_won(year)
     d = playoffs.to_dict()[0]
-    # Changes in team names
+    # Accounting forhanges in team names
     if 'New Jersey Nets' in d:
         d['Brooklyn Nets'] = d.pop('New Jersey Nets')
     if 'Charlotte Bobcats' in d:
@@ -247,7 +197,7 @@ def playoff_round_3P_playoff_performance(year):
         d['New Orleans Pelicans'] = d.pop('New Orleans Hornets')
 
     keys = d.keys()
-    season_data = season_full_data(year, True)
+    season_data = season_full_data(year, playoffs)
     playoff_data = {}
 
     for i in range(season_data.shape[0]):
@@ -266,5 +216,3 @@ def playoff_round_3P_playoff_performance(year):
         playoff_data[i][1] = statistics.mean(playoff_data[i][1])
 
     return dict(sorted(playoff_data.items()))
-
-
