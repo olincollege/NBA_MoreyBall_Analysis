@@ -7,6 +7,12 @@ def get_shooting_reg_season():
     """
     Scrapes 10 seasons of shooting data from basketball-reference and
     converts it to CSV format.
+
+    Args: 
+        None.
+
+    Returns:
+        Creates .csv files in folder 'Data.
     """
     for i in range(10,21):
         r = get(f"https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url=%2Fleagues%2FNBA_20{i}.html&div=div_team_shooting")
@@ -20,6 +26,12 @@ def get_shooting_playoffs():
     """
     Scrapes 10 playoffs of shooting data during playoffs from 
     basketball-reference and converts it to CSV format.
+
+    Args: 
+        None.
+
+    Returns:
+        Creates .csv files in folder 'Data.
     """
     for i in range(10,21):
         r = get(f"https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url=%2Fplayoffs%2FNBA_20{i}.html&div=div_opponent_shooting")
@@ -32,6 +44,12 @@ def convert_to_csv():
     """
     Takes plain text doc output of the last two functions and converts
     files to CSV format.
+
+    Args:
+        None.
+    
+    Returns: 
+        Fits the names of the files to match the year they belong to.
     """
     os.chdir('Data')
     files = os.listdir()
@@ -45,10 +63,11 @@ def get_win_data(year):
     team name and win-loss in a tuple.
 
     Args:
-        year: an int representing the year of data to receive
+        year: An int representing the year of data to receive
 
-    Returns: A pandas dataframe where the index is team name, first column is
-    number of wins, and second is number of losses.
+    Returns: 
+        A Pandas dataframe where the index is team name, first column is
+        number of wins, and second is number of losses.
     """
     record = {}
     r = get(f"https://www.basketball-reference.com/leagues/NBA_{year}.html")
@@ -87,10 +106,11 @@ def get_playoff_series_won(year):
     in the playoffs.
 
     Args:
-        year: an int that represents the year of data to retrieve
+        year: An int that represents the year of data to retrieve
 
-    Returns: A pandas dataframe where indices are team names, and the column
-    is the number of playoffs series' won.
+    Returns:
+        A pandas dataframe where indices are team names, and the column
+        is the number of playoffs series' won.
     """
     series_results = {}
     r = get(f"https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url=%2Fplayoffs%2FNBA_{year}_standings.html&div=div_expanded_standings")
@@ -109,11 +129,15 @@ def get_playoff_series_won(year):
 
 def get_efg():
     """
-    Scrapes eFG% for every team for each of the years  
+    Scrapes eFG% for every team for each of the years.
 
-    Returns: A pandas dataframe where indices are the year of team data collected
-    (30 entries for 2010, 30 for 2011, etc.), and the column is eFG% of that 
-    team. Note that team names are not referenced in the dataframe.
+    Args: 
+        None.
+
+    Returns: 
+        A pandas dataframe where indices are the year of team data collected
+        (30 entries for 2010, 30 for 2011, etc.), and the column is eFG% of that 
+        team. Note that team names are not referenced in the dataframe.
     """
     efgs = {}
     efg_year = []
