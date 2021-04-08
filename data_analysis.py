@@ -1,7 +1,11 @@
+"""
+Functions to analyse and select data from scrapped files.
+"""
+import os
+import operator
+import statistics
 import pandas as pd
-import matplotlib.pyplot as plt
-import os, operator, statistics
-from scraper import get_win_data, get_playoff_series_won
+from scraper import get_playoff_series_won
 
 pd.set_option('display.max_colwidth', 0)
 
@@ -33,10 +37,10 @@ def get_file_names():
     """
     Get file names from the folder 'Data' in the repo.
 
-    Args: 
+    Args:
         None.
 
-    Returns: 
+    Returns:
         List of strings containing all the names of the files.
     """
     owd = os.getcwd()
@@ -51,16 +55,16 @@ def get_season_clean_csv(data_set):
     collected from Basketball-Reference.com.
 
     Args:
-        data_set: Pandas dataframe from Basketball-Reference.com.
+        data_set: Pandas dataframe with data from Basketball-Reference.com.
 
-    Returns: 
-        Pandas dataframe with no empty data points and excess
-        columns deleted. 
+    Returns:
+        A Pandas data frame with no empty data points, and excess
+        columns deleted.
     """
     data_set_size = len(data_set.columns) - 19
     readable_column_headers = ['nan'] + list(DATA_NAMES.keys()) + \
         (['nan']*data_set_size)
-    
+
     data_set.columns = readable_column_headers
     data_set = data_set.drop(columns = ['nan'])
 
@@ -69,18 +73,18 @@ def get_season_clean_csv(data_set):
 
 def season_full_data(year, playoff):
     """
-    Gets the full data for any season in the scarped data. 
-    
+    Gets the full data for any season in the scrapped data.
+
     Args:
-        year: An int representing the year of data to be returned
+        year: An int representing the year of data to be returned.
         playoff: A boolean representing whether to clean playoff or regular
         season data.
 
     Returns:
-        A cleaned up pandas dataframe with full season data.
+        A cleaned-up Pandas data frame with full-season data.
     """
     if playoff:
-            data_set = pd.read_csv(f"Data/{year}p.csv")
+        data_set = pd.read_csv(f"Data/{year}p.csv")
     else:
         data_set = pd.read_csv(f"Data/{year}.csv")
     data_set.columns = data_set.iloc[1]
@@ -94,19 +98,19 @@ def season_summary(year, playoff):
     """
     Get season summary stats for each year.
 
-    This stat will be the league average of each stat listed in DATA_NAMES
-    for all teams.
-
     Args:
-        year: An int representing the desired year of data
+        year: An int representing the desired year of data.
         playoff: A boolean representing whether to pull playoff data or
         regular season.
 
     Returns:
-        A cleaned up pandas dataframe with season summary data.
+        A cleaned-up Pandas dataframe with season summary data.
+
+    This stat will be the league average of each stat listed in DATA_NAMES
+    for all teams.
     """
     if playoff:
-            data_set = pd.read_csv(f"Data/{year}p.csv")
+        data_set = pd.read_csv(f"Data/{year}p.csv")
     else:
         data_set = pd.read_csv(f"Data/{year}.csv")
     data_set.columns = data_set.iloc[1]
@@ -118,39 +122,39 @@ def season_summary(year, playoff):
 
 def nba_stat_summary(stat_nba, playoff):
     """
-    Pulls data for a single stat for every team over the last 10 seasons.
+    Pulls data for a single stat for every team over the scrapped data.
 
-    Args: 
+    Args:
         stat_nba: A string of the nba stat to pull data on.
         playoff: A boolean representing whether to pull playoff data or
         regular season.
 
-    Returns: 
+    Returns:
         A Pandas dataframe where indices represent different teams and
         column header represents the season.
     """
-    df = pd.DataFrame(columns=YEARS_LIST)
+    stat_summary_df = pd.DataFrame(columns=YEARS_LIST)
 
     for years in YEARS_LIST:
         season_full =  season_full_data(years, playoff)
-        df[years] = pd.to_numeric(season_full[stat_nba])
+        stat_summary_df[years] = pd.to_numeric(season_full[stat_nba])
 
-    return df
+    return stat_summary_df
 
 
 def team_summary(team):
     """
-    Get team summary stats for each year from the scraped CSV.
-
-    Team summary stats include yearly averages for all stats listed in
-    DATA_NAMES.
+    Get team summary stats for each year from the scrapped CSV.
 
     Args:
         team: A string representing the name of the team to pull data for.
-    
-    Returns: 
+
+    Returns:
         A Pandas dataframe containing the team summary from
         scarpped CSV.
+
+    Team summary stats include yearly averages for all stats listed in
+    DATA_NAMES.
     """
     file_names = sorted(get_file_names())
     team_summary_full = pd.DataFrame(columns = list(DATA_NAMES.keys()),
@@ -162,7 +166,7 @@ def team_summary(team):
             data_set.set_index("Team", inplace=True)
             data_set.head()
             team_summary_full.loc[files] = data_set.loc[team]
-    
+
     team_summary_full.pop("Team")
     team_summary_full.index = team_summary_full.index.str.replace('.csv'
         ,'', regex=True)
@@ -173,29 +177,29 @@ def team_summary(team):
 def edge_cases_metric():
     """
     Calculates the edge metric for each season.
-    
-    Args: 
+
+    Args:
         None.
 
-    Returns: 
-        A dictionary where key is an int representing the year and the
-    value is the number of edge-cases during that year.
+    Returns:
+        A dictionary where the key is an int representing the year and the
+        value is the number of edge cases during that year.
 
     1 Point is added to the "edge" metric during a season if a team that is
-    top 5 in 3PA makes the playoffs. 
-    1 point is subtracted if a team that is bottom 5 in 3PA makes the playoffs.
+    Top 5 in 3PA makes the playoffs.
+    1 point is subtracted if a team that is Bottom 5 in 3PA makes the playoffs.
     """
     edges = {}
-    
+
     for i in range(10,20):
         data = season_full_data(f"20{i}", False)
         playoffs = list(get_playoff_series_won(f"20{i}").to_dict()[0].keys())
         percents = dict(zip(data.iloc[:,1],data.iloc[:,11]))
         sorted_percents = sorted(percents.items(), key=operator.itemgetter(1))
         bottom_five = sorted_percents[0:5]
-        
+
         top_five = sorted_percents[-6:-1]
-        
+
         top_five.append(sorted_percents[0])
         for j in range(0,5):
             metric = 0
@@ -207,15 +211,15 @@ def edge_cases_metric():
     return edges
 
 
-def playoff_round_3P(year, playoff):
+def playoff_round_3p(year, playoff):
     """
     Compares playoffs outcome to % of shots attempted
     from 3PT and % of three points attempted made.
 
     Args:
-        year: An int representing the year to compare data for
-        playoffs: a boolean representing whether to compare outcome to 
-        team shooting data in the playoffs or regular season
+        year: An int representing the year to compare data for.
+        playoffs: A boolean representing whether to compare outcome to
+        team shooting data in the playoffs or regular season.
 
     Returns:
         A dictionary where the key is the number of playoffs rounds
@@ -223,30 +227,28 @@ def playoff_round_3P(year, playoff):
         %3PM
     """
     playoffs = get_playoff_series_won(year)
-    d = playoffs.to_dict()[0]
+    dic_playoff = playoffs.to_dict()[0]
     # Accounting forhanges in team names
-    if 'New Jersey Nets' in d:
-        d['Brooklyn Nets'] = d.pop('New Jersey Nets')
-    if 'Charlotte Bobcats' in d:
-        d['Charlotte Hornets'] = d.pop('Charlotte Bobcats')
-    if 'New Orleans Hornets' in d:
-        d['New Orleans Pelicans'] = d.pop('New Orleans Hornets')
+    if 'New Jersey Nets' in dic_playoff:
+        dic_playoff['Brooklyn Nets'] = dic_playoff.pop('New Jersey Nets')
+    if 'Charlotte Bobcats' in dic_playoff:
+        dic_playoff['Charlotte Hornets'] = dic_playoff.pop('Charlotte Bobcats')
+    if 'New Orleans Hornets' in dic_playoff:
+        dic_playoff['New Orleans Pelicans'] = dic_playoff.pop('New Orleans Hornets')
 
-    keys = d.keys()
     season_data = season_full_data(year, playoff)
     playoff_data = {}
 
     for i in range(season_data.shape[0]):
         name = season_data.iloc[i,1]
-        if name not in list(d.keys()):
+        if name not in list(dic_playoff.keys()):
             continue
+        if dic_playoff[name] in playoff_data:
+            playoff_data[dic_playoff[name]][0].append(float(season_data.iloc[i,11]))
+            playoff_data[dic_playoff[name]][1].append(float(season_data.iloc[1,17]))
         else:
-            if d[name] in playoff_data:
-                playoff_data[d[name]][0].append(float(season_data.iloc[i,11]))
-                playoff_data[d[name]][1].append(float(season_data.iloc[1,17]))
-            else:
-                playoff_data[d[name]] = [[float(season_data.iloc[i,11])], 
-                    [float(season_data.iloc[i,17])]]
+            playoff_data[dic_playoff[name]] = [[float(season_data.iloc[i,11])],
+            [float(season_data.iloc[i,17])]]
 
     for i in range(0,5):
         playoff_data[i][0] = statistics.mean(playoff_data[i][0])

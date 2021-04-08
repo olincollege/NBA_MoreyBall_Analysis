@@ -1,54 +1,62 @@
-from bs4 import BeautifulSoup
-from requests import get
+"""
+Data scrapper functions to collect data from basketball-reference.com
+"""
+
+import os
 import pandas as pd
-import os, statistics
+from requests import get
+from bs4 import BeautifulSoup
+
 
 def get_shooting_reg_season():
     """
-    Scrapes 10 seasons of shooting data from basketball-reference and
-    converts it to CSV format.
+    Scrapes 10 seasons of shooting data from basketball-reference.com
+    and converts it to CSV format.
 
-    Args: 
+    Args:
         None.
 
     Returns:
-        Creates .csv files in folder 'Data.
+        Creates .csv files in folder 'Data'.
     """
     for i in range(10,21):
-        r = get(f"https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url=%2Fleagues%2FNBA_20{i}.html&div=div_team_shooting")
-        soup = BeautifulSoup(r.content, 'html.parser')
-        table = soup.find('table')
-        df = pd.read_html(str(table))[0]
-        df.to_csv(f'Data/{i}')
+        raw_data = get(f"https://widgets.sports-reference.com/wg.fcgi?css=1&site=\
+            bbr&url=%2Fleagues%2FNBA_20{i}.html&div=div_team_shooting")
+        html_parser = BeautifulSoup(raw_data.content, 'html.parser')
+        table_finder = html_parser.find('table')
+        shotting_data_df = pd.read_html(str(table_finder))[0]
+        shotting_data_df.to_csv(f'Data/{i}')
 
 
 def get_shooting_playoffs():
     """
-    Scrapes 10 playoffs of shooting data during playoffs from 
-    basketball-reference and converts it to CSV format.
+    Scrapes 10 playoffs of shooting data during playoffs from
+    basketball-reference.com and converts it to CSV format.
 
-    Args: 
+    Args:
         None.
 
     Returns:
-        Creates .csv files in folder 'Data.
+        Creates .csv files in folder 'Data'.
     """
     for i in range(10,21):
-        r = get(f"https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url=%2Fplayoffs%2FNBA_20{i}.html&div=div_opponent_shooting")
-        soup = BeautifulSoup(r.content, 'html.parser')
-        table = soup.find('table')
-        df = pd.read_html(str(table))[0]
-        df.to_csv(f'Data/{i}p')
+        raw_data = get(f"https://widgets.sports-reference.com/wg.fcgi?css=1&\
+            site=bbr&url=%2Fplayoffs%2FNBA_20{i}.html&div=div_opponent_shooting")
+        html_parser = BeautifulSoup(raw_data.content, 'html.parser')
+        table_finder = html_parser.find('table')
+        shotting_data_df = pd.read_html(str(table_finder))[0]
+        shotting_data_df.to_csv(f'Data/{i}p')
+
 
 def convert_to_csv():
     """
-    Takes plain text doc output of the last two functions and converts
+    Takes plain text doc output of the get_shooting() and converts
     files to CSV format.
 
     Args:
         None.
-    
-    Returns: 
+
+    Returns:
         Fits the names of the files to match the year they belong to.
     """
     os.chdir('Data')
@@ -65,13 +73,13 @@ def get_win_data(year):
     Args:
         year: An int representing the year of data to receive
 
-    Returns: 
-        A Pandas dataframe where the index is team name, first column is
-        number of wins, and second is number of losses.
+    Returns:
+        A Pandas data frame where the index is the team name, the first column is
+        the number of wins and the second is the number of losses.
     """
     record = {}
-    r = get(f"https://www.basketball-reference.com/leagues/NBA_{year}.html")
-    soup = BeautifulSoup(r.content, 'html.parser')
+    raw_data = get(f"https://www.basketball-reference.com/leagues/NBA_{year}.html")
+    soup = BeautifulSoup(raw_data.content, 'html.parser')
 
     if year >= 2016:
         table_e = soup.find('table', attrs={'id':'confs_standings_E'})
@@ -87,11 +95,10 @@ def get_win_data(year):
         key = df_e.iloc[i,0]
         if key[len(key)-8: len(key)] == "Division":
             continue
-        else:
-            record[df_e.iloc[i,0]] = (df_e.iloc[i,1], df_e.iloc[i,2])
-            record[df_w.iloc[i,0]] = (df_w.iloc[i,1], df_w.iloc[i,2])
-    
-    if 'New Jersey Nets' in record.keys(): 
+        record[df_e.iloc[i,0]] = (df_e.iloc[i,1], df_e.iloc[i,2])
+        record[df_w.iloc[i,0]] = (df_w.iloc[i,1], df_w.iloc[i,2])
+
+    if 'New Jersey Nets' in record.keys():
         record['Brooklyn Nets'] = record.pop('New Jersey Nets')
 
     record = dict(sorted(record.items()))
@@ -102,26 +109,27 @@ def get_win_data(year):
 
 def get_playoff_series_won(year):
     """
-    Retrieves the number of series' won by each team for a single year
-    in the playoffs.
+    Retrieves the number of game series' won by each team for
+    a single year in the playoffs.
 
     Args:
-        year: An int that represents the year of data to retrieve
+        year: An int that represents the year of data to retrieve.
 
     Returns:
-        A pandas dataframe where indices are team names, and the column
+        A Pandas data frame where indices are team names, and the column
         is the number of playoffs series' won.
     """
     series_results = {}
-    r = get(f"https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url=%2Fplayoffs%2FNBA_{year}_standings.html&div=div_expanded_standings")
-    soup = BeautifulSoup(r.content, 'html.parser')
+    raw_data = get(f"https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url=%2\
+        Fplayoffs%2FNBA_{year}_standings.html&div=div_expanded_standings")
+    soup = BeautifulSoup(raw_data.content, 'html.parser')
     data = soup.find('table', attrs={'id':'expanded_standings'})
-    df = pd.read_html(str(data))[0]
-    for i in range(0,df.shape[0]):
-        record = df.iloc[i,2]
+    series_won_df = pd.read_html(str(data))[0]
+    for i in range(0,series_won_df.shape[0]):
+        record = series_won_df.iloc[i,2]
         dash = record.index('-')
-        series_results[df.iloc[i,1]] = int(df.iloc[i,2][0:dash])//4
-    
+        series_results[series_won_df.iloc[i,1]] = int(series_won_df.iloc[i,2][0:dash])//4
+
     series_results = pd.DataFrame.from_dict(series_results, orient='index')
     series_results.index = series_results.index.str.replace("*","")
     return series_results
@@ -129,29 +137,31 @@ def get_playoff_series_won(year):
 
 def get_efg():
     """
-    Scrapes eFG% for every team for each of the years.
+    Scrapes eFG% for every team for each of the years
+    from basket_reference.com.
 
-    Args: 
+    Args:
         None.
 
-    Returns: 
-        A pandas dataframe where indices are the year of team data collected
-        (30 entries for 2010, 30 for 2011, etc.), and the column is eFG% of that 
-        team. Note that team names are not referenced in the dataframe.
+    Returns:
+        A Pandas data frame where indices are the year of team data collected,
+        and the column is eFG% of that team.
+
+    Note that team names are not referenced in the data frame.
     """
-    efgs = {}
     efg_year = []
     efg = []
     year_list = ['2010', '2011', '2012', '2013', \
         '2014', '2015', '2016', '2017', '2018', '2019', '2020']
     for year in year_list:
-        r = get(f"https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url=%2Fleagues%2FNBA_{year}.html&div=div_misc_stats")
-        soup = BeautifulSoup(r.content, 'html.parser')
+        raw_data = get(f"https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url\
+            =%2Fleagues%2FNBA_{year}.html&div=div_misc_stats")
+        soup = BeautifulSoup(raw_data.content, 'html.parser')
         data = soup.find('table', attrs={'id':'misc_stats'})
-        df = pd.read_html(str(data))[0]
-        for i in range(0,df.shape[0]):
-            efg.append(df.iloc[i,17])
+        efg_df = pd.read_html(str(data))[0]
+        for i in range(0,efg_df.shape[0]):
+            efg.append(efg_df.iloc[i,17])
             efg_year.append(year)
-            
-    df = pd.DataFrame(list(zip(efg_year, efg)), columns=['Year', 'eFG%'])
-    return df
+
+    efg_df_extract = pd.DataFrame(list(zip(efg_year, efg)), columns=['Year', 'eFG%'])
+    return efg_df_extract
