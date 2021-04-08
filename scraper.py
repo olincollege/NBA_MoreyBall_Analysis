@@ -20,8 +20,8 @@ def get_shooting_reg_season():
         Creates .csv files in folder 'Data'.
     """
     for i in range(10,21):
-        raw_data = get(f"https://widgets.sports-reference.com/wg.fcgi?css=1&site=\
-            bbr&url=%2Fleagues%2FNBA_20{i}.html&div=div_team_shooting")
+        raw_data = get("https://widgets.sports-reference.com/wg.fcgi?css=1&site="+
+            f"bbr&url=%2Fleagues%2FNBA_20{i}.html&div=div_team_shooting")
         html_parser = BeautifulSoup(raw_data.content, 'html.parser')
         table_finder = html_parser.find('table')
         shotting_data_df = pd.read_html(str(table_finder))[0]
@@ -40,8 +40,8 @@ def get_shooting_playoffs():
         Creates .csv files in folder 'Data'.
     """
     for i in range(10,21):
-        raw_data = get(f"https://widgets.sports-reference.com/wg.fcgi?css=1&\
-            site=bbr&url=%2Fplayoffs%2FNBA_20{i}.html&div=div_opponent_shooting")
+        raw_data = get("https://widgets.sports-reference.com/wg.fcgi?css=1&" +
+            f"site=bbr&url=%2Fplayoffs%2FNBA_20{i}.html&div=div_opponent_shooting")
         html_parser = BeautifulSoup(raw_data.content, 'html.parser')
         table_finder = html_parser.find('table')
         shotting_data_df = pd.read_html(str(table_finder))[0]
@@ -120,8 +120,8 @@ def get_playoff_series_won(year):
         is the number of playoffs series' won.
     """
     series_results = {}
-    raw_data = get(f"https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url=%2\
-        Fplayoffs%2FNBA_{year}_standings.html&div=div_expanded_standings")
+    raw_data = get("https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&" +
+                    f"url=%2Fplayoffs%2FNBA_{year}_standings.html&div=div_expanded_standings")
     soup = BeautifulSoup(raw_data.content, 'html.parser')
     data = soup.find('table', attrs={'id':'expanded_standings'})
     series_won_df = pd.read_html(str(data))[0]
@@ -151,11 +151,11 @@ def get_efg():
     """
     efg_year = []
     efg = []
-    year_list = ['2010', '2011', '2012', '2013', \
+    year_list = ['2010', '2011', '2012', '2013',\
         '2014', '2015', '2016', '2017', '2018', '2019', '2020']
     for year in year_list:
-        raw_data = get(f"https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&url\
-            =%2Fleagues%2FNBA_{year}.html&div=div_misc_stats")
+        raw_data = get("https://widgets.sports-reference.com/wg.fcgi?css=1&site=bbr&" +
+                        f"url=%2Fleagues%2FNBA_{year}.html&div=div_misc_stats")
         soup = BeautifulSoup(raw_data.content, 'html.parser')
         data = soup.find('table', attrs={'id':'misc_stats'})
         efg_df = pd.read_html(str(data))[0]

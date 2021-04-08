@@ -5,7 +5,8 @@ import os
 import operator
 import statistics
 import pandas as pd
-from scraper import get_playoff_series_won
+import numpy as np
+from scraper import get_playoff_series_won, get_win_data
 
 pd.set_option('display.max_colwidth', 0)
 
@@ -255,3 +256,39 @@ def playoff_round_3p(year, playoff):
         playoff_data[i][1] = statistics.mean(playoff_data[i][1])
 
     return dict(sorted(playoff_data.items()))
+
+
+def win_compare_r_squared(stat_nba):
+    """
+    Compares the win/loss record to a NBA stat and outputs
+    its correlation-coefficient for scrapped data.
+
+    Args:
+        stat_nba: A string of the nba stat to pull data on.
+
+    Returns:
+        A dictionary with keys as years and the values as the
+        r^2 values.
+    """
+    stat_nba_df = pd.DataFrame(columns=YEARS_LIST)
+    print(f"R^2 values for {stat_nba}")
+    for years in YEARS_LIST:
+        win_data = list(get_win_data(int(years)).iloc[:,0])
+        games_played = int(season_summary(years, False).iloc[:,2])
+        stat_nba_df[years] = [int(i) for i in win_data]
+        stat_nba_df[years] = stat_nba_df[years].div(games_played).round(2)
+
+    stat_nba_df.index = get_win_data(int(2010)).index
+    nba_stat = nba_stat_summary(stat_nba, False)
+    nba_stat.index = get_win_data(int(2010)).index
+
+    r_squared_dict = {}
+    for year in YEARS_LIST:
+        stat_values = nba_stat[str(year)]
+        win_values = stat_nba_df[str(year)]
+        corr_matrix = np.corrcoef(win_values, stat_values)
+        corr_xy = corr_matrix[0,1]
+        r_sq = corr_xy**2
+        r_squared_dict[year]: r_sq
+    return r_squared_dict
+    
