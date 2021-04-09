@@ -1,5 +1,7 @@
+"""
+PyTest Functions
+"""
 from data_analysis import (
-    get_season_clean_csv,
     season_full_data,
     season_summary,
     edge_cases_metric,
@@ -7,33 +9,21 @@ from data_analysis import (
     YEARS_LIST
 )
 
-#2) check if season full data matches season_summary
-#3) edge case verification
 
-
-def test_empty():
-    for years in YEARS_LIST:
-        test_df = season_summary(years, False)
-        assert test_df.isnull().values.any() == False
-
-        test_df = season_summary(years, True)
-        assert test_df.isnull().values.any() == False
-
-        test_df = season_full_data(years, False)
-        assert test_df.isnull().values.any() == False
-
-        test_df = season_full_data(years, True)
-        assert test_df.isnull().values.any() == False
-
-
-def test_check_summary():
+def test_season_summary():
+    """
+    Tests whether the data in season summary is valid.
+    Miutes played should be convertible to floats and should
+    have a mean calculation.
+    """
     full = season_full_data(2010, False)
     summary_full = season_summary(2010, False)
-    full_avg = round(full['Minutes_Played'].mean(), 2)
-    summary = round(float(summary_full['Minutes_Played']), 2)
+    round(full['Minutes_Played'].mean(), 2)
+    round(float(summary_full['Minutes_Played']), 2)
     return True
 
-def test_playoff_3P_stats():
+
+def test_playoff_round_3p():
     """
     This tests that 1. the playoff_3P_round function fetches
     the right data and 2. that the data in our playoffs csvs
@@ -44,7 +34,7 @@ def test_playoff_3P_stats():
     assert playoff_round_3p(2019, True) == \
     {0: [.35725, .323125], 1: [0.38525, 0.346],\
          2: [0.397, 0.348], 3: [0.38, 0.37200000000000005],\
-              4: [0.406, 0.34600000000000003]}
+            4: [0.406, 0.34600000000000003]}
 
     assert playoff_round_3p(2018, False) == \
     {0: [0.307625, 0.361], 1: [0.34925, 0.36375], \
@@ -61,3 +51,23 @@ def test_edge_case():
         ['2011', 1, 3]
     assert list(edge_cases_metric("Field_Goals_Attempted_3PA").iloc[3,:]) == \
         ['2013', 3, 7]
+
+
+def test_get_season_clean_csv():
+    """
+    Testing whether the data returned by get_season_clean_csv
+    is accurate and valid./
+    """
+    for years in YEARS_LIST:
+        condition = False
+        test_df = season_summary(years, False)
+        assert test_df.isnull().values.any() == condition
+
+        test_df = season_summary(years, True)
+        assert test_df.isnull().values.any() == condition
+
+        test_df = season_full_data(years, False)
+        assert test_df.isnull().values.any() == condition
+
+        test_df = season_full_data(years, True)
+        assert test_df.isnull().values.any() == condition

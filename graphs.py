@@ -6,7 +6,6 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-from scraper import get_win_data, get_efg
 from data_analysis import season_summary, nba_stat_summary,\
     team_summary, edge_cases_metric, playoff_round_3p, DATA_NAMES, YEARS_LIST, \
         win_compare_r_squared
@@ -240,7 +239,7 @@ def edge_case_graph(stat):
     data = edge_cases_metric(stat)
     fig, sub_plots = plt.subplots()
     axis_ordered = np.arange(len(list(data['Season'])))
-    
+
     sub_plots.bar(axis_ordered - width/2, list(data['Edge Case Metric']), \
         width, label="Edge Case Metric")
     sub_plots.bar(axis_ordered + width/2, list(data['All Edge Cases']), \
@@ -278,6 +277,16 @@ def playoffs_versus_season():
 
 
 def plot_win_compare_r_squared():
+    """
+    Plots r-squared vals for %3PM and win% and %3PA and win% over time in
+    subplots.
+
+    Args:
+        None.
+
+    Returns:
+        A subplot of scatter plots comparing win% to season number
+    """
     fga_r_sq = win_compare_r_squared("Field_Goals_3P")
     fgm_r_sq = win_compare_r_squared("Field_Goals_Attempted_3PA")
     plt.subplot(121)

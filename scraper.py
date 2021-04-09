@@ -2,7 +2,6 @@
 Data scrapper functions to collect data from basketball-reference.com
 """
 
-import os, shutil
 import pandas as pd
 from tqdm import tqdm
 from requests import get
@@ -10,6 +9,11 @@ from bs4 import BeautifulSoup
 
 
 def run_scraper():
+    """
+    Runs all of the scraper methods.
+    Note: Requires folders 'Data/efg', 'Data/season_shooting',
+    'Data/win-loss', and 'Data/playoffs_outcome' to exist.
+    """
     with tqdm(total = 6, desc="Running Scraper") as pbar:
         pbar.update(1)
         get_shooting_playoffs()

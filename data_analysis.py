@@ -6,7 +6,6 @@ import operator
 import statistics
 import pandas as pd
 import numpy as np
-from scraper import get_playoff_series_won, get_win_data
 
 pd.options.mode.chained_assignment = None
 pd.set_option('display.max_colwidth', 0)
@@ -167,39 +166,37 @@ def team_summary(team):
 def edge_cases_metric(stat):
     """
     Calculates the edge metric for each season.
-    
-    Args: 
+
+    Args:
         None.
-    Returns: 
+    Returns:
         A dictionary where key is an int representing the year and the
     value is the number of edge-cases during that year.
     1 Point is added to the "edge" metric during a season if a team that is
-    top 5 in 3PA makes the playoffs. 
+    top 5 in 3PA makes the playoffs.
     1 point is subtracted if a team that is bottom 5 in 3PA makes the playoffs.
     """
     edges = []
     metrics = []
     nums_total = []
-    df = pd.DataFrame()
+    edge_data = pd.DataFrame()
     for i in range(10,21):
         data = season_full_data(f"20{i}", False)
         playoffs = list(pd.read_csv(f'Data/playoffs_outcome/playoffs_20{i}.csv').iloc[:,0])
         percents = dict(zip(data['Team'].str.replace("*","", regex=False),data[stat]))
 
         for j in range(0, len(percents)):
-            keys = list(percents.keys())
-            percents[keys[j]] = float(percents[keys[j]])
-        
-        sorted_percents = sorted(percents.items(), key=operator.itemgetter(1))
-        bottom_five = sorted_percents[0:5]
-        top_five = sorted_percents[-5:-1]
-        
-        top_five.append(sorted_percents[len(sorted_percents)-1])
+            percents[list(percents.keys())[j]] = float(percents[list(percents.keys())[j]])
+
+        percents = sorted(percents.items(), key=operator.itemgetter(1))
+        bottom_five = percents[0:5]
+        top_five = percents[-5:-1]
+
+        top_five.append(percents[len(percents)-1])
         #return top_five, bottom_five, sorted_percents, playoffs
         metric = 0
         num_total = 0
         for k in range(0,5):
-            
             if bottom_five[k][0] in playoffs:
                 metric -= 1
                 num_total += 1
@@ -209,10 +206,10 @@ def edge_cases_metric(stat):
         edges.append(f"20{i}")
         metrics.append(metric)
         nums_total.append(num_total)
-    df['Season'] = edges
-    df['Edge Case Metric'] = metrics
-    df['All Edge Cases'] = nums_total
-    return df
+    edge_data['Season'] = edges
+    edge_data['Edge Case Metric'] = metrics
+    edge_data['All Edge Cases'] = nums_total
+    return edge_data
 
 
 def playoff_round_3p(year, playoff):
@@ -251,11 +248,11 @@ def playoff_round_3p(year, playoff):
         else:
             playoff_data[dic_playoff[name]] = [[float(season_data.iloc[i,11])],
             [float(season_data.iloc[i,17])]]
-    
+
     for i in range(0,5):
         playoff_data[i][0] = statistics.mean(playoff_data[i][0])
         playoff_data[i][1] = statistics.mean(playoff_data[i][1])
-        
+
     return dict(sorted(playoff_data.items()))
 
 
@@ -277,9 +274,9 @@ def win_compare_r_squared(stat_nba):
         win_loss_record[years] = [int(i) for i in win_data]
         win_loss_record[years] = win_loss_record[years].div(games_played).round(2)
 
-    win_loss_record.index = pd.read_csv(f'Data/win-loss/all_records_2010.csv').index
+    win_loss_record.index = pd.read_csv('Data/win-loss/all_records_2010.csv').index
     nba_stat = nba_stat_summary(stat_nba, False)
-    nba_stat.index = pd.read_csv(f'Data/win-loss/all_records_2010.csv').index
+    nba_stat.index = pd.read_csv('Data/win-loss/all_records_2010.csv').index
 
     r_squared_dict = {}
     for year in YEARS_LIST:
