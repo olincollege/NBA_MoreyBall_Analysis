@@ -17,12 +17,12 @@ DATA_NAMES = {
     'Minutes_Played': 'Minutes Played by Team',
     'Field_Goal_Percent': 'Field Goal Percentage',
     'Average_Distance': ' Average Distance of Field Goals Attempted',
-    'Field_Goals_Attempled_2PA': 'Percent of Field Goals Attempted that were 2 Point Attempts',
+    'Field_Goals_Attempted_2PA': 'Percent of Field Goals Attempted that were 2 Point Attempts',
     '2PA_0-3': 'Field Goals Attempted in the range of 0 - 3 fts from the hoop (2 Points)',
     '2PA_3-10':'Field Goals Attempted in the range of 3 - 10 fts from the hoop (2 Points)',
     '2PA_10-16': 'Field Goals Attempted in the range of 10 - 16 fts from the hoop (2 Points)',
     '2PA_16+': 'Field Goals Attempted above 16 fts from the hoop (2 Points)',
-    'Field_Goals_Attempled_3PA': 'Percent of Field Goals Attempted that were 3 Point Attempts',
+    'Field_Goals_Attempted_3PA': 'Percent of Field Goals Attempted that were 3 Point Attempts',
     'Field_Goals_2P': 'Percent of Field Goals that were 2 Points',
     '2P_0-3': 'Field Goals in the range of 0 - 3 fts from the hoop (2 Points)',
     '2P_0-6': 'Field Goals in the range of 3 - 10 fts from the hoop (2 Points)',
@@ -45,7 +45,7 @@ def get_file_names():
         List of strings containing all the names of the files.
     """
     owd = os.getcwd()
-    names = os.listdir(os.chdir('Data'))
+    names = os.listdir(os.chdir('Data/season_shooting'))
     os.chdir(owd)
     return names
 
@@ -85,12 +85,12 @@ def season_full_data(year, playoff):
         A cleaned-up Pandas data frame with full-season data.
     """
     if playoff:
-        data_set = pd.read_csv(f"Data/{year}p.csv")
+        data_set = pd.read_csv(f"Data/season_shooting/{year}p.csv")
     else:
-        data_set = pd.read_csv(f"Data/{year}.csv")
+        data_set = pd.read_csv(f"Data/season_shooting/{year}.csv")
     data_set.columns = data_set.iloc[1]
     data_set = data_set[2:-1]
-    data_set['Team'] = data_set['Team'].str.replace("*","")
+    data_set['Team'] = data_set['Team'].str.replace("*","", regex=False)
 
     return get_season_clean_csv(data_set)
 
@@ -111,12 +111,12 @@ def season_summary(year, playoff):
     for all teams.
     """
     if playoff:
-        data_set = pd.read_csv(f"Data/{year}p.csv")
+        data_set = pd.read_csv(f"Data/season_shooting/{year}p.csv")
     else:
-        data_set = pd.read_csv(f"Data/{year}.csv")
+        data_set = pd.read_csv(f"Data/season_shooting/{year}.csv")
     data_set.columns = data_set.iloc[1]
     data_set = data_set[-1:]
-    data_set['Team'] = data_set['Team'].str.replace("*","")
+    data_set['Team'] = data_set['Team'].str.replace("*","", regex=False)
 
     return get_season_clean_csv(data_set)
 
@@ -175,40 +175,49 @@ def team_summary(team):
     return team_summary_full.dropna()
 
 
-def edge_cases_metric():
+def edge_cases_metric(stat):
     """
     Calculates the edge metric for each season.
-
-    Args:
+    
+    Args: 
         None.
 
-    Returns:
-        A dictionary where the key is an int representing the year and the
-        value is the number of edge cases during that year.
+    Returns: 
+        A dictionary where key is an int representing the year and the
+    value is the number of edge-cases during that year.
 
     1 Point is added to the "edge" metric during a season if a team that is
-    Top 5 in 3PA makes the playoffs.
-    1 point is subtracted if a team that is Bottom 5 in 3PA makes the playoffs.
+    top 5 in 3PA makes the playoffs. 
+    1 point is subtracted if a team that is bottom 5 in 3PA makes the playoffs.
     """
     edges = {}
-
-    for i in range(10,20):
+    
+    for i in range(10,21):
         data = season_full_data(f"20{i}", False)
-        playoffs = list(get_playoff_series_won(f"20{i}").to_dict()[0].keys())
-        percents = dict(zip(data.iloc[:,1],data.iloc[:,11]))
+        playoffs = list(pd.read_csv(f'Data/playoffs_outcome/playoffs_20{i}.csv').iloc[:,0])
+        percents = dict(zip(data['Team'].str.replace("*","", regex=False),data[stat]))
+
+        for j in range(0, len(percents)):
+            keys = list(percents.keys())
+            percents[keys[j]] = float(percents[keys[j]])
+        
         sorted_percents = sorted(percents.items(), key=operator.itemgetter(1))
         bottom_five = sorted_percents[0:5]
-
-        top_five = sorted_percents[-6:-1]
-
-        top_five.append(sorted_percents[0])
-        for j in range(0,5):
-            metric = 0
-            if bottom_five[j][0] in playoffs:
+        top_five = sorted_percents[-5:-1]
+        
+        top_five.append(sorted_percents[len(sorted_percents)-1])
+        #return top_five, bottom_five, sorted_percents, playoffs
+        metric = 0
+        num_total = 0
+        for k in range(0,5):
+            
+            if bottom_five[k][0] in playoffs:
                 metric -= 1
-            if top_five[j][0] in playoffs:
+                num_total += 1
+            if top_five[k][0] in playoffs:
                 metric += 1
-        edges[i] = metric
+                num_total += 1
+        edges[i] = (metric, num_total)
     return edges
 
 
@@ -227,8 +236,8 @@ def playoff_round_3p(year, playoff):
         won and the key is a list where the 0th element is %3PA and the 1st is
         %3PM
     """
-    playoffs = get_playoff_series_won(year)
-    dic_playoff = playoffs.to_dict()[0]
+    playoffs = pd.read_csv(f"Data/playoffs_outcome/playoffs_{year}.csv")
+    dic_playoff = dict(zip(playoffs.iloc[:,0],playoffs.iloc[:,1]))
     # Accounting forhanges in team names
     if 'New Jersey Nets' in dic_playoff:
         dic_playoff['Brooklyn Nets'] = dic_playoff.pop('New Jersey Nets')
@@ -270,25 +279,24 @@ def win_compare_r_squared(stat_nba):
         A dictionary with keys as years and the values as the
         r^2 values.
     """
-    stat_nba_df = pd.DataFrame(columns=YEARS_LIST)
+    win_loss_record = pd.DataFrame(columns=YEARS_LIST)
     print(f"R^2 values for {stat_nba}")
     for years in YEARS_LIST:
-        win_data = list(get_win_data(int(years)).iloc[:,0])
+        win_data = pd.read_csv(f'Data/win-loss/all_records_{years}.csv').iloc[:,1]
         games_played = int(season_summary(years, False).iloc[:,2])
-        stat_nba_df[years] = [int(i) for i in win_data]
-        stat_nba_df[years] = stat_nba_df[years].div(games_played).round(2)
+        win_loss_record[years] = [int(i) for i in win_data]
+        win_loss_record[years] = win_loss_record[years].div(games_played).round(2)
 
-    stat_nba_df.index = get_win_data(int(2010)).index
+    win_loss_record.index = pd.read_csv(f'Data/win-loss/all_records_2010.csv').index
     nba_stat = nba_stat_summary(stat_nba, False)
-    nba_stat.index = get_win_data(int(2010)).index
+    nba_stat.index = pd.read_csv(f'Data/win-loss/all_records_2010.csv').index
 
     r_squared_dict = {}
     for year in YEARS_LIST:
         stat_values = nba_stat[str(year)]
-        win_values = stat_nba_df[str(year)]
+        win_values = win_loss_record[str(year)]
         corr_matrix = np.corrcoef(win_values, stat_values)
         corr_xy = corr_matrix[0,1]
         r_sq = corr_xy**2
-        r_squared_dict[year]: r_sq
+        r_squared_dict[year] = round(r_sq,4)
     return r_squared_dict
-    

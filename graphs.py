@@ -111,14 +111,14 @@ def win_compare(year,stat_nba, playoff, xlabel, ylabel,):
     win_loss_record = pd.DataFrame(columns=YEARS_LIST)
 
     for years in YEARS_LIST:
-        win_data = list(get_win_data(int(years)).iloc[:,0])
+        win_data = pd.read_csv(f'Data/win-loss/all_records_{year}.csv').iloc[:,1]
         games_played = int(season_summary(years, playoff).iloc[:,2])
         win_loss_record[years] = [int(i) for i in win_data]
         win_loss_record[years] = win_loss_record[years].div(games_played).round(2)
 
-    win_loss_record.index = get_win_data(int(2010)).index
+    win_loss_record.index = pd.read_csv(f'Data/win-loss/all_records_{year}.csv').index
     nba_stat = nba_stat_summary(stat_nba, playoff)
-    nba_stat.index = get_win_data(int(2010)).index
+    nba_stat.index = pd.read_csv(f'Data/win-loss/all_records_{2010}.csv').index
     plt.scatter(win_loss_record[year], nba_stat[year])
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
@@ -174,7 +174,7 @@ def efg_vs_3pa():
         A boxplot comparing the effective field goal values
         with the 3 point attempted values.
     """
-    efgs = get_efg()
+    efgs = pd.read_csv('Data/efg/efg.csv')
     sns.boxplot(x="Year", y="eFG%", data=efgs)
     plt.show()
 
@@ -263,9 +263,9 @@ def playoffs_versus_season():
         with the %3PM.
     """
     plt.subplot(221)
-    seaborn_plots_silent('Field_Goals_Attempled_3PA', False)
+    seaborn_plots_silent('Field_Goals_Attempted_3PA', False)
     plt.subplot(222)
-    seaborn_plots_silent('Field_Goals_Attempled_3PA', True)
+    seaborn_plots_silent('Field_Goals_Attempted_3PA', True)
     plt.subplot(223)
     seaborn_plots_silent('Field_Goals_3P', False)
     plt.subplot(224)
