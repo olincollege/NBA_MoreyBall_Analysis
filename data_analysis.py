@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 from scraper import get_playoff_series_won, get_win_data
 
+pd.options.mode.chained_assignment = None
 pd.set_option('display.max_colwidth', 0)
 
 DATA_NAMES = {
@@ -64,7 +65,7 @@ def get_season_clean_csv(data_set):
 
     data_set.columns = readable_column_headers
     data_set = data_set.drop(columns = ['nan'])
-    #data_set.loc[:,'Rank'] = 0
+    data_set.loc[:,'Rank'] = list(np.zeros(data_set.shape[0]))
     return data_set
 
 
@@ -177,8 +178,9 @@ def edge_cases_metric(stat):
     1 point is subtracted if a team that is bottom 5 in 3PA makes the playoffs.
     """
     edges = []
-    metric = []
+    metrics = []
     nums_total = []
+    df = pd.DataFrame()
     for i in range(10,21):
         data = season_full_data(f"20{i}", False)
         playoffs = list(pd.read_csv(f'Data/playoffs_outcome/playoffs_20{i}.csv').iloc[:,0])
@@ -204,11 +206,13 @@ def edge_cases_metric(stat):
             if top_five[k][0] in playoffs:
                 metric += 1
                 num_total += 1
-        edges.append(i)
-        metric.append(metric)
+        edges.append(f"20{i}")
+        metrics.append(metric)
         nums_total.append(num_total)
-    
-    return edges
+    df['Season'] = edges
+    df['Edge Case Metric'] = metrics
+    df['All Edge Cases'] = nums_total
+    return df
 
 
 def playoff_round_3p(year, playoff):
@@ -243,15 +247,15 @@ def playoff_round_3p(year, playoff):
             continue
         if dic_playoff[name] in playoff_data:
             playoff_data[dic_playoff[name]][0].append(float(season_data.iloc[i,11]))
-            playoff_data[dic_playoff[name]][1].append(float(season_data.iloc[1,17]))
+            playoff_data[dic_playoff[name]][1].append(float(season_data.iloc[i,17]))
         else:
             playoff_data[dic_playoff[name]] = [[float(season_data.iloc[i,11])],
             [float(season_data.iloc[i,17])]]
-
+    
     for i in range(0,5):
         playoff_data[i][0] = statistics.mean(playoff_data[i][0])
         playoff_data[i][1] = statistics.mean(playoff_data[i][1])
-
+        
     return dict(sorted(playoff_data.items()))
 
 

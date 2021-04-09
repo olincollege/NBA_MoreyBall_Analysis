@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scraper import get_win_data, get_efg
 from data_analysis import season_summary, nba_stat_summary,\
-    team_summary, edge_cases_metric, playoff_round_3p, DATA_NAMES, YEARS_LIST
+    team_summary, edge_cases_metric, playoff_round_3p, DATA_NAMES, YEARS_LIST, \
+        win_compare_r_squared
 
 
 def season_summary_visual(stat, playoff, y_label, title):
@@ -235,17 +236,20 @@ def edge_case_graph(stat):
     Top 5 in 3PA makes the playoffs.
     1 point is subtracted if a team that is Bottom 5 in 3PA makes the playoffs.
     """
+    width = 0.35
     data = edge_cases_metric(stat)
-
     fig, sub_plots = plt.subplots()
-
-    axis_ordered = np.arange(len(list(data.keys())))
-    sub_plots.bar(axis_ordered, list(data.values()), 0.35, label="Edge Cases")
-
+    axis_ordered = np.arange(len(list(data['Season'])))
+    
+    sub_plots.bar(axis_ordered - width/2, list(data['Edge Case Metric']), \
+        width, label="Edge Case Metric")
+    sub_plots.bar(axis_ordered + width/2, list(data['All Edge Cases']), \
+        width, label="All Edge Cases")
     sub_plots.set_xticks(axis_ordered)
-    sub_plots.set_xticklabels(list(data.keys()))
+    sub_plots.set_xticklabels(data['Season'])
     sub_plots.set_ylabel('Number of Edge Cases')
     sub_plots.set_xlabel('Season')
+    sub_plots.legend()
     fig.tight_layout()
     plt.show()
 
@@ -270,6 +274,22 @@ def playoffs_versus_season():
     seaborn_plots_silent('Field_Goals_3P', False)
     plt.subplot(224)
     seaborn_plots_silent('Field_Goals_3P', True)
+    plt.show()
+
+
+def plot_win_compare_r_squared():
+    fga_r_sq = win_compare_r_squared("Field_Goals_3P")
+    fgm_r_sq = win_compare_r_squared("Field_Goals_Attempted_3PA")
+    plt.subplot(121)
+    plt.scatter(fga_r_sq.keys(), fga_r_sq.values())
+    plt.xlabel('Season')
+    plt.ylabel('R-squared')
+    plt.title('R-Squared for %3PA and Win Percentage')
+    plt.subplot(122)
+    plt.scatter(fgm_r_sq.keys(), fgm_r_sq.values())
+    plt.xlabel('Season')
+    plt.ylabel('R-squared')
+    plt.title('R-Squared for %3PM and Win Percentage')
     plt.show()
 
 

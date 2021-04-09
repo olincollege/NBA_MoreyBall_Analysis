@@ -58,7 +58,7 @@ def get_shooting_playoffs():
     """
     for i in range(10,21):
         raw_data = get("https://widgets.sports-reference.com/wg.fcgi?css=1&" + \
-            f"site=bbr&url=%2Fplayoffs%2FNBA_20{i}.html&div=div_opponent_shooting")
+            f"site=bbr&url=%2Fplayoffs%2FNBA_20{i}.html&div=div_team_shooting")
         html_parser = BeautifulSoup(raw_data.content, 'html.parser')
         table_finder = html_parser.find('table')
         shooting_data_df = pd.read_html(str(table_finder))[0]
