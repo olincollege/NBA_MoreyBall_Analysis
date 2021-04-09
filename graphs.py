@@ -220,7 +220,7 @@ def playoff_3p_chart(year, playoffs):
     plt.show()
 
 
-def edge_case_graph():
+def edge_case_graph(stat):
     """
     Generates bar graph to compare the edge case metric over
     the scrapped data frame.
@@ -235,7 +235,7 @@ def edge_case_graph():
     Top 5 in 3PA makes the playoffs.
     1 point is subtracted if a team that is Bottom 5 in 3PA makes the playoffs.
     """
-    data = edge_cases_metric()
+    data = edge_cases_metric(stat)
 
     fig, sub_plots = plt.subplots()
 
