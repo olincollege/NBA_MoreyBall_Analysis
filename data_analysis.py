@@ -36,7 +36,7 @@ YEARS_LIST = ['2010','2011','2012','2013','2014', \
 
 def get_file_names():
     """
-    Get file names from the folder 'Data' in the repo.
+    Get file names from the folder 'Data/season_shooting' in the repo.
 
     Args:
         None.
@@ -89,7 +89,7 @@ def season_full_data(year, playoff):
     else:
         data_set = pd.read_csv(f"Data/season_shooting/{year}.csv")
     data_set.columns = data_set.iloc[1]
-    data_set = data_set[2:-1]
+    data_set = data_set[2:-1].dropna()
     data_set['Team'] = data_set['Team'].str.replace("*","", regex=False)
 
     return get_season_clean_csv(data_set)
@@ -115,7 +115,7 @@ def season_summary(year, playoff):
     else:
         data_set = pd.read_csv(f"Data/season_shooting/{year}.csv")
     data_set.columns = data_set.iloc[1]
-    data_set = data_set[-1:]
+    data_set = data_set[-1:].dropna()
     data_set['Team'] = data_set['Team'].str.replace("*","", regex=False)
 
     return get_season_clean_csv(data_set)
@@ -162,6 +162,8 @@ def team_summary(team):
         index = file_names)
 
     for files in file_names:
+        if 'p' in files:
+            continue
         data_set = season_full_data(files[:-4], False)
         if team in data_set.Team.values:
             data_set.set_index("Team", inplace=True)
